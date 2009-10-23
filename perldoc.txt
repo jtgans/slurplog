@@ -1,0 +1,194 @@
+SLURPLOG(1)           User Contributed Perl Documentation          SLURPLOG(1)
+
+
+
+NNAAMMEE
+       slurplog.pl - a simple script to pull down multiple log files
+
+SSYYNNOOPPSSIISS
+       slurplog.pl [-h] [-t] [-d date] <config_file>
+
+       See below for more description of the switches.
+
+RREEQQUUIIRREEMMEENNTTSS
+       Slurplog currently requires the following Perl modules in order to
+       function:
+
+           * XML::Simple
+           * Net::FTP
+           * Date::Manip
+           * A working POSIX strftime implementation
+
+       All of these (save the strftime implementation) are available from your
+       friendly CPAN mirror.
+
+DDEESSCCRRIIPPTTIIOONN
+       slurplog is a quick script that takes an XML configuration file as
+       input and downloads various log files from the settings in the file.
+       Primarily, slurplog uses Net::FTP as its method to download files.
+
+       Slurplog was created for the need of downloading many log files from
+       varying servers with varying file names (usually based upon the date
+       and time). As such, filenames are run through strftime and converted to
+       their respective values.
+
+OOPPTTIIOONNSS
+       -h    Prints out a brief help message.
+
+       -t    Tests the configuration file for validity, and shows what it's
+             internal configuration is using Data::Dumper.
+
+       -d date
+             Run slurplog as if it was the day described by date. Note that
+             date is either an absolute date or relative date in textual
+             format, so you need to enclose date in double quotes to make it
+             show up as one parameter. Example dates are "January 1st, 1970"
+             or "3 days ago".
+
+       <config_file>
+             The name of an XML configuration file, as described below.
+
+CCOONNFFIIGGUURRAATTIIOONN FFOORRMMAATT
+       Slurplog's configuration format is a simple XML file of the form:
+
+           <config>
+             <general>
+               <baselogdir> ... </baselogdir>
+               <template> ... </template>
+             </general>
+
+             <sites>
+               <site>
+                 <host> ... </host>
+                 <port> ... </port>
+                 <user> ... </user>
+                 <pass> ... </pass>
+                 <passive> ... </passive>
+                 <logdir> ... </logdir>
+                 <logfile> ... </logfile>
+                 <cwd> ... </cwd>
+               </site>
+
+               <site> ... </site>
+             </sites>
+           </config>
+
+       All configuration files mmuusstt start with the <config> tag, otherwise
+       they're not valid configuration files.
+
+       <general>
+           General, non-site specific configuration is place here. Currently,
+           only two tags are supported: <baselogdir> and <template>.
+
+       <baselogdir>
+           This tag sets the base directory where slurplog will store it's log
+           files.
+
+       <template> [optional]
+           <template> is a special case tag, and accepts all of the same tags
+           that the <site> tag does. This is primarily used for large setups
+           where you have multiple sites with similar settings and you want to
+           set a general template. See the example configuration for an idea
+           of how this works. This is _n_o_t required in the configuration.
+
+       <sites>
+           <sites> is a required tag, and defines a collection of <site> tags.
+           Without this tag, slurplog doesn't know what the heck to do.
+
+       <site> This tag starts a definition for a website's log file. Alone,
+       this tag is meaningless, but with it's child tags, it becomes a power-
+       ful tool for downloading the logfiles for each site.
+
+       TTaaggss UUnnddeerrssttoooodd iinn <<ssiittee>> aanndd <<tteemmppllaattee>>
+
+       Tags that are understood in the <site> and <template> sections are
+       below. Note that if a tag is present in the <template> section, it
+       becomes optional in the following <site> definitions. You can override
+       the <template>'s settings, however, by setting these tags in the <site>
+       definitions.
+
+       <host>
+           The fully qualified domain name of the host to connect to.
+
+       <port> [optional]
+           The port number to connect to. Defaults to 21 if not specified.
+
+       <user>
+           The username to connect as.
+
+       <pass>
+           The plaintext password to connect with.
+
+       <passive> [optional]
+           Either 1 or 0 to turn on or off passive mode. Defaults to off if
+           not specified.
+
+       <logdir>
+           The name of the subdirectory to download the log files into. Note
+           that this is a subdirectory of <baselogdir>, so it should not have
+           any slashes in it.
+
+       <logfile>
+           The filename of the logfile to download, without a path. Note that
+           this is actually passed directly to strftime, and as such, you can
+           pass in any of strftime's format codes. For example, the filename
+           "access.%y%m%d.log" will expand to "access.<year><month><day>.log".
+
+       <cwd>
+           The directory of the logfile to download. Note that this is passed
+           verbatim to the CWD command for FTP, so it can be either an abso-
+           lute pathname or a relative one.
+
+EEXXAAMMPPLLEE CCOONNFFIIGG FFIILLEE
+           <config>
+             <general>
+               <baselogdir>/var/slurplog_downloads</baselogdir>
+
+               <template>
+                 <host>example.com</host>
+                 <port>2121</port>
+                 <user>joe@blow.com</user>
+                 <pass>open123</pass>
+                 <passive>1</passive>
+               </template>
+             </general>
+
+             <sites>
+               <site>
+                 <logdir>foo_website</logdir>
+                 <cwd>/joes_website/logs</cwd>
+                 <logfile>access.%y%m%d.log</logfile>
+               </site>
+
+               <site>
+                 <logdir>bar_website</logdir>
+                 <cwd>/bar_website/logs</cwd>
+                 <logfile>access.log</logfile>
+               </site>
+             </sites>
+           </config>
+
+BBUUGGSS
+       * No known bugs at this time.
+
+AAUUTTHHOORR
+       June R. Tate <june@theonelab.com>
+
+LLIICCEENNSSEE
+       This program is free software; you can redistribute it and/or modify it
+       under the terms  of the GNU General Public License as published by the
+       Free Software Foundation; either version 2 of the License, or (at your
+       option) any later version.
+
+       This program is distributed in the hope that it will be useful, but
+       WITHOUT ANY WARRANTY; without even the implied warranty of MER-
+       CHANTABILITY or FITNEESS FOR A PARTICULAR PURPOSE. See the GNU General
+       Public License for more details.
+
+       You should have recieved a copy of the GNU General Public License along
+       with this program; if not, write to the Free Software Foundation, Inc.,
+       59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+
+
+
+perl v5.8.1                       2005-03-09                       SLURPLOG(1)
